@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTickets } from "../App.jsx";
 
 function Toast({ show, message }) {
@@ -18,9 +18,16 @@ function Toast({ show, message }) {
   );
 }
 
-export default function Create() {
-  const { addTicket } = useTickets();
+export default function Edit() {
+  const { id } = useParams();
+  const tid = Number(id);
   const navigate = useNavigate();
+  const { tickets, updateTicket } = useTickets();
+
+  const ticket = useMemo(
+    () => tickets.find((t) => t.id === tid),
+    [tickets, tid]
+  );
 
   const [form, setForm] = useState({
     title: "",
@@ -29,7 +36,6 @@ export default function Create() {
     category: "Technical",
     status: "",
   });
-
   const [errors, setErrors] = useState({
     title: "",
     description: "",
@@ -37,14 +43,25 @@ export default function Create() {
   });
   const [toast, setToast] = useState({ show: false, message: "" });
 
+  useEffect(() => {
+    if (ticket) {
+      setForm({
+        title: ticket.title || "",
+        description: ticket.description || "",
+        priority: ticket.priority || "medium",
+        category: ticket.category || "Technical",
+        status: ticket.status || "",
+      });
+    }
+  }, [ticket]);
+
   const onChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-
-    if (errors[name]) setErrors({ ...errors, [name]: "" });
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const showToast = (message = "Ticket created successfully!") => {
+  const showToast = (message = "Ticket updated successfully!") => {
     setToast({ show: true, message });
     setTimeout(() => setToast((t) => ({ ...t, show: false })), 1200);
   };
@@ -54,7 +71,6 @@ export default function Create() {
     if (!form.title.trim()) next.title = "Title is required.";
     if (!form.description.trim()) next.description = "Description is required.";
     if (!form.status) next.status = "Please select a status.";
-
     const allowed = ["open", "in-progress", "closed"];
     if (form.status && !allowed.includes(form.status))
       next.status = "Invalid status selected.";
@@ -64,11 +80,28 @@ export default function Create() {
 
   const submit = (e) => {
     e.preventDefault();
+    if (!ticket) return;
     if (!validate()) return;
-    addTicket(form);
+    updateTicket(ticket.id, { ...form });
     showToast();
-    setTimeout(() => navigate("/"), 900);
+    setTimeout(() => navigate(`/ticket/${ticket.id}`), 900);
   };
+
+  if (!ticket) {
+    return (
+      <div className="text-center py-16">
+        <h2 className="text-2xl font-bold text-slate-800 mb-4">
+          Ticket Not Found
+        </h2>
+        <Link
+          to="/"
+          className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold"
+        >
+          Go to Dashboard
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -81,10 +114,11 @@ export default function Create() {
           className="bg-white rounded-xl shadow-md p-6 sm:p-8"
         >
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
-            Create New Ticket
+            Edit Ticket #{ticket.id}
           </h2>
 
           <div className="space-y-6">
+            {/* Title */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Title *
@@ -98,14 +132,11 @@ export default function Create() {
                     ? "border-rose-500 focus:ring-rose-400"
                     : "border-gray-300 focus:ring-indigo-500"
                 }`}
-                placeholder="Brief description of the issue"
+                placeholder="Brief title"
                 aria-invalid={!!errors.title}
-                aria-describedby="title-error"
               />
               {errors.title && (
-                <p id="title-error" className="mt-1 text-sm text-rose-600">
-                  {errors.title}
-                </p>
+                <p className="mt-1 text-sm text-rose-600">{errors.title}</p>
               )}
             </div>
 
@@ -123,12 +154,11 @@ export default function Create() {
                     ? "border-rose-500 focus:ring-rose-400"
                     : "border-gray-300 focus:ring-indigo-500"
                 }`}
-                placeholder="Detailed description of your issue"
+                placeholder="Detailed description"
                 aria-invalid={!!errors.description}
-                aria-describedby="desc-error"
               />
               {errors.description && (
-                <p id="desc-error" className="mt-1 text-sm text-rose-600">
+                <p className="mt-1 text-sm text-rose-600">
                   {errors.description}
                 </p>
               )}
@@ -181,8 +211,6 @@ export default function Create() {
                       ? "border-rose-500 focus:ring-rose-400"
                       : "border-gray-300 focus:ring-indigo-500"
                   }`}
-                  aria-invalid={!!errors.status}
-                  aria-describedby="status-error"
                   required
                 >
                   <option value="" disabled>
@@ -193,23 +221,22 @@ export default function Create() {
                   <option value="closed">Closed</option>
                 </select>
                 {errors.status && (
-                  <p id="status-error" className="mt-1 text-sm text-rose-600">
-                    {errors.status}
-                  </p>
+                  <p className="mt-1 text-sm text-rose-600">{errors.status}</p>
                 )}
               </div>
             </div>
 
+            {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button
                 type="submit"
                 className="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
               >
-                Create Ticket
+                Save Changes
               </button>
               <button
                 type="button"
-                onClick={() => navigate("/")}
+                onClick={() => navigate(-1)}
                 className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
               >
                 Cancel

@@ -4,10 +4,9 @@ import Nav from './components/Nav.jsx'
 import Home from './pages/Home.jsx'
 import Create from './pages/Create.jsx'
 import Detail from './pages/Detail.jsx'
-import Missing from './pages/Missing.jsx'
 import { defaultTickets } from './utils/mockData.js'
+import Edit from './components/Edit.jsx'
 
-// ===== Context =====
 const TicketContext = createContext()
 export const useTickets = () => useContext(TicketContext)
 
@@ -55,7 +54,6 @@ function TicketProvider({ children }) {
   return <TicketContext.Provider value={value}>{children}</TicketContext.Provider>
 }
 
-// ===== App =====
 export default function App() {
   return (
     <TicketProvider>
@@ -66,7 +64,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/create" element={<Create />} />
             <Route path="/ticket/:id" element={<Detail />} />
-            <Route path="*" element={<Missing />} />
+            <Route path="/edit/:id" element={<Edit />} />
           </Routes>
         </main>
       </div>
