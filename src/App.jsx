@@ -5,7 +5,8 @@ import Home from './pages/Home.jsx'
 import Create from './pages/Create.jsx'
 import Detail from './pages/Detail.jsx'
 import { defaultTickets } from './utils/mockData.js'
-import Edit from './components/Edit.jsx'
+import Edit from './pages/Edit.jsx'
+
 
 const TicketContext = createContext()
 export const useTickets = () => useContext(TicketContext)
